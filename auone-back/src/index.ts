@@ -1,40 +1,61 @@
+
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 
-import authRoutes from './routes/auth';
-import dispositivosRoutes from './routes/dispositivos';
-import sensoresRoutes from './routes/sensores';
-import usuariosRoutes from './routes/usuario';
-import perfilRoutes from './routes/perfil';
+import authRoutes from './routes/auth.js';
+import dispositivosRoutes from './routes/dispositivos.js';
+import sensoresRoutes from './routes/sensores.js';
+import usuariosRoutes from './routes/usuario.js';
+import perfilRoutes from './routes/perfil.js';
 
+// Carregar variáveis de ambiente do .env
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// --------------------------------------------------
+// Configuração de CORS
+// --------------------------------------------------
+const corsOptions = {
+  origin: 'https://inpho3o-anonymous-8081.exp.direct', // ou '*', ou seu domínio de produção
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+};
 
+// Aplica CORS para todas as rotas
+app.use(cors(corsOptions));
 
-// Liberando CORS pra todo mundo para funcionar o  back no frotend
-app.use(cors()); 
-app.options('/api/*', cors()); // Lida com preflight requests
+// Permite requisições preflight (OPTIONS)
+app.options('*', cors(corsOptions));
 
-// Configuração de payload
+// --------------------------------------------------
+// Middlewares para tratar requisições com payload
+// --------------------------------------------------
 app.use(express.json({ limit: '20mb' }));
 app.use(express.urlencoded({ limit: '20mb', extended: true }));
 
-// Rotas organizadas
-app.use('/api/auth', authRoutes);                 // ex: /api/auth/login
-app.use('/api/dispositivos', dispositivosRoutes); // ex: /api/dispositivos
-app.use('/api/sensores', sensoresRoutes);         // ex: /api/sensores
-app.use('/api/usuarios', usuariosRoutes);         // ex: /api/usuarios/:id
-app.use(perfilRoutes);                            // ex: /perfil
+// --------------------------------------------------
+// Rotas da aplicação
+// --------------------------------------------------
+app.use('/api/auth', authRoutes);                 // ex: POST /api/auth/cadastro
+app.use('/api/dispositivos', dispositivosRoutes); // ex: GET /api/dispositivos
+app.use('/api/sensores', sensoresRoutes);         // ex: GET /api/sensores
+app.use('/api/usuarios', usuariosRoutes);         // ex: GET /api/usuarios/:id
+app.use(perfilRoutes);                            // ex: GET /perfil
 
-// Rota raiz para teste
+// --------------------------------------------------
+// Rota raiz (teste rápido)
+// --------------------------------------------------
 app.get('/', (req, res) => {
   res.send('🌿 API AUONE rodando com sucesso!');
 });
 
+// --------------------------------------------------
+// Inicialização do servidor
+// --------------------------------------------------
 app.listen(PORT, () => {
   console.log(`🚀 Servidor rodando na porta ${PORT}`);
 });
