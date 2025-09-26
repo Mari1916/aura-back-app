@@ -4,7 +4,7 @@ import { PrismaClient } from '@prisma/client';
 const router = Router();
 const prisma = new PrismaClient();
 
-// ✅ Rota para receber dados dos sensores (ESP32 envia via POST)
+// Rota para receber dados dos sensores (ESP32 envia via POST)
 router.post('/sensores', async (req, res) => {
   try {
     const { deviceId, umidadeSolo, luminosidade, temperaturaSolo, temperaturaAr } = req.body;
@@ -34,7 +34,7 @@ router.post('/sensores', async (req, res) => {
   }
 });
 
-// ✅ Rota para consultar dados por data (app usa via GET)
+// Rota para consultar dados por data (app usa via GET)
 router.get('/sensores/:deviceId', async (req, res) => {
   try {
     const { deviceId } = req.params;
