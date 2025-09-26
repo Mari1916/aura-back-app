@@ -17,7 +17,7 @@ const PORT = process.env.PORT || 3000;
 
 // Liberando CORS pra todo mundo para funcionar o  back no frotend
 app.use(cors()); 
-app.options('*', cors()); // Lida com preflight requests
+app.options('/api/*', cors()); // Lida com preflight requests
 
 // Configuração de payload
 app.use(express.json({ limit: '20mb' }));
