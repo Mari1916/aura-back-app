@@ -12,14 +12,11 @@ const JWT_SECRET = process.env.JWT_SECRET || "default_secret";
 // Rota POST /api/auth/cadastro
 router.post("/cadastro", async (req: Request, res: Response) => {
   console.log("Recebido no back:", req.body); // debug
-
   try {
     const { nome, email, senha, profissao, empresa } = req.body;
 
     if (!nome || !email || !senha || !profissao || !empresa) {
-      return res
-        .status(400)
-        .json({ erro: "Preencha todos os campos: nome, email, senha, profissão e empresa." });
+      return res.status(400).json({ erro: "Preencha todos os campos" });
     }
 
     // Verifica se usuário já existe
