@@ -10,8 +10,8 @@ const router = express.Router();
 const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || "default_secret"; // fallback
 
-// Rota POST /api/auth/cadastro
 router.post("/cadastro", async (req: Request, res: Response) => {
+  console.log("Dados recebidos:", req.body); // <- ajuda a identificar problemas de JSON
   try {
     const { nome, email, senha, profissao, empresa } = req.body;
 
@@ -21,27 +21,17 @@ router.post("/cadastro", async (req: Request, res: Response) => {
         .json({ erro: "Preencha nome, email, senha, profissão e empresa." });
     }
 
-    // Verifica se usuário já existe
     const existe = await prisma.usuario.findUnique({ where: { email } });
     if (existe) {
       return res.status(400).json({ erro: "E-mail já cadastrado" });
     }
 
-    // Criptografa senha
     const senhaHash = await bcrypt.hash(senha, 10);
 
-    // Cria usuário no banco
     const usuario = await prisma.usuario.create({
-      data: {
-        nome,
-        email,
-        senhaHash, // campo correto do schema
-        profissao,
-        empresa,
-      },
+      data: { nome, email, senhaHash, profissao, empresa },
     });
 
-    // Gera token JWT
     const token = jwt.sign({ id: usuario.id }, JWT_SECRET, { expiresIn: "7d" });
 
     return res
@@ -58,6 +48,7 @@ router.post("/cadastro", async (req: Request, res: Response) => {
       .json({ erro: "Erro desconhecido", detalhe: String(error) });
   }
 });
+
 
 // Rota POST /api/auth/login
 router.post("/login", async (req: Request, res: Response) => {
