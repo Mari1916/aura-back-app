@@ -15,11 +15,12 @@ const PORT = process.env.PORT || 3000;
 
 // Configuração CORS
 const corsOptions = {
-  origin: 'https://inpho3o-anonymous-8081.exp.direct', // ajuste para seu front-end ou '*'
+  origin: '*', // Libera tudo pra todo mundo
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true,
+  credentials: false, // mude para false quando usar '*'
 };
+
 
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
