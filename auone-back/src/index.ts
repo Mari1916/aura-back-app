@@ -13,29 +13,30 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Configurações CORS (funciona para web e mobile)
+// ==================== CONFIGURAÇÃO CORS ====================
 app.use(cors({
-  origin: "*", // permite todas as origens
+  origin: "*", // permite todas as origens (pode ser restrito em produção)
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
-// Middleware para JSON
-app.use(express.json({ limit: "20mb" }));
+// ==================== MIDDLEWARES ====================
+app.use(express.json({ limit: "20mb" })); // aceita JSON grande
 app.use(express.urlencoded({ extended: true }));
 
-// Rotas
+// ==================== ROTAS ====================
 app.use("/api/auth", authRoutes);
 app.use("/api/dispositivos", dispositivosRoutes);
 app.use("/api/sensores", sensoresRoutes);
 app.use("/api/usuarios", usuariosRoutes);
-app.use(perfilRoutes);
+app.use("/api/perfil", perfilRoutes); // corrigi para ter prefixo consistente
 
 // Rota raiz
 app.get("/", (req, res) => {
   res.json({ message: "🌿 API AUONE rodando com sucesso!" });
 });
 
+// ==================== START DO SERVIDOR ====================
 app.listen(PORT, () => {
   console.log(`🚀 Servidor rodando na porta ${PORT}`);
 });
