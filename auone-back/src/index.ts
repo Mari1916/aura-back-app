@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 
-import authRoutes from "./routes/auth"; // rotas de auth
+import authRoutes from "./routes/auth";
 import dispositivosRoutes from "./routes/dispositivos";
 import sensoresRoutes from "./routes/sensores";
 import usuariosRoutes from "./routes/usuario";
@@ -13,24 +13,27 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ==================== CONFIGURAÇÃO CORS ====================
-app.use(cors({
-  origin: ["http://localhost:8081"], // libera só o seu front (adicione mais se precisar)
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-  credentials: true
-}));
-
-// Responde preflight (OPTIONS)
-app.options("*", (req, res) => {
-  res.header("Access-Control-Allow-Origin", "http://localhost:8081");
+// ==================== CORS GLOBAL ====================
+// Permite todas as origens, todos métodos e headers
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS");
   res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  res.sendStatus(200);
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200); // responde preflight imediatamente
+  }
+  next();
 });
 
+// Também adiciona o middleware cors oficial (boa prática)
+app.use(cors({
+  origin: "*",
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));
+
 // ==================== MIDDLEWARES ====================
-app.use(express.json({ limit: "20mb" })); // aceita JSON grande
+app.use(express.json({ limit: "20mb" }));
 app.use(express.urlencoded({ extended: true }));
 
 // ==================== ROTAS ====================
@@ -38,7 +41,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/dispositivos", dispositivosRoutes);
 app.use("/api/sensores", sensoresRoutes);
 app.use("/api/usuarios", usuariosRoutes);
-app.use("/api/perfil", perfilRoutes); // corrigi para ter prefixo consistente
+app.use("/api/perfil", perfilRoutes);
 
 // Rota raiz
 app.get("/", (req, res) => {
