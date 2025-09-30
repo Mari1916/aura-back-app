@@ -15,10 +15,19 @@ const PORT = process.env.PORT || 3000;
 
 // ==================== CONFIGURAÇÃO CORS ====================
 app.use(cors({
-  origin: "*", // permite todas as origens (pode ser restrito em produção)
+  origin: ["http://localhost:8081"], // libera só o seu front (adicione mais se precisar)
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"]
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true
 }));
+
+// Responde preflight (OPTIONS)
+app.options("*", (req, res) => {
+  res.header("Access-Control-Allow-Origin", "http://localhost:8081");
+  res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.sendStatus(200);
+});
 
 // ==================== MIDDLEWARES ====================
 app.use(express.json({ limit: "20mb" })); // aceita JSON grande
