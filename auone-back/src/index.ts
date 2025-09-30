@@ -13,30 +13,18 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ==================== CORS GLOBAL ====================
-// Permite todas as origens, todos métodos e headers
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(200); // responde preflight imediatamente
-  }
-  next();
-});
-
-// Também adiciona o middleware cors oficial (boa prática)
+// ----------------- CORS -----------------
 app.use(cors({
   origin: "*",
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
-// ==================== MIDDLEWARES ====================
+// ----------------- MIDDLEWARES -----------------
 app.use(express.json({ limit: "20mb" }));
 app.use(express.urlencoded({ extended: true }));
 
-// ==================== ROTAS ====================
+// ----------------- ROTAS -----------------
 app.use("/api/auth", authRoutes);
 app.use("/api/dispositivos", dispositivosRoutes);
 app.use("/api/sensores", sensoresRoutes);
@@ -48,7 +36,12 @@ app.get("/", (req, res) => {
   res.json({ message: "🌿 API AUONE rodando com sucesso!" });
 });
 
-// ==================== START DO SERVIDOR ====================
+// Fallback 404
+app.use((req, res) => {
+  res.status(404).json({ erro: "Rota não encontrada" });
+});
+
+// ----------------- INICIAR SERVIDOR -----------------
 app.listen(PORT, () => {
   console.log(`🚀 Servidor rodando na porta ${PORT}`);
 });
