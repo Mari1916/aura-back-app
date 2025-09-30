@@ -2,11 +2,11 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 
-import authRoutes from "./routes/auth.js"; // rotas de auth
-import dispositivosRoutes from "./routes/dispositivos.js";
-import sensoresRoutes from "./routes/sensores.js";
-import usuariosRoutes from "./routes/usuario.js";
-import perfilRoutes from "./routes/perfil.js";
+import authRoutes from "./routes/auth"; // rotas de auth
+import dispositivosRoutes from "./routes/dispositivos";
+import sensoresRoutes from "./routes/sensores";
+import usuariosRoutes from "./routes/usuario";
+import perfilRoutes from "./routes/perfil";
 
 dotenv.config();
 
