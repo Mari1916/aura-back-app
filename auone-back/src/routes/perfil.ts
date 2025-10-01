@@ -35,7 +35,7 @@ router.get('/perfil', async (req, res) => {
 })
 
 // Adiciona rota de atualização de perfil do usuário autenticado
-router.put('/perfil', async (req, res) => {
+router.put('/editarPerfil', async (req, res) => {
   try {
     const authHeader = req.headers['authorization']
     const token = authHeader && authHeader.split(' ')[1]
