@@ -8,7 +8,7 @@ const prisma = new PrismaClient()
 
 const JWT_SECRET = process.env.JWT_SECRET || 'auone-secret'
 
-router.get('/perfil', async (req, res) => {
+router.get('/perfis', async (req, res) => {
   try {
     const token = req.headers.authorization?.replace('Bearer ', '')
     if (!token) return res.status(401).json({ erro: 'Token não fornecido' })
