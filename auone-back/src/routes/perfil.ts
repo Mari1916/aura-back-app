@@ -8,7 +8,7 @@ const prisma = new PrismaClient()
 
 const JWT_SECRET = process.env.JWT_SECRET || 'auone-secret'
 
-router.get('/perfis', async (req, res) => {
+router.get('/', async (req, res) => {
   try {
     const token = req.headers.authorization?.replace('Bearer ', '')
     if (!token) return res.status(401).json({ erro: 'Token não fornecido' })
@@ -35,7 +35,7 @@ router.get('/perfis', async (req, res) => {
 })
 
 // Adiciona rota de atualização de perfil do usuário autenticado
-router.put('/editarPerfil', async (req, res) => {
+router.put('/', async (req, res) => {
   try {
     const authHeader = req.headers['authorization']
     const token = authHeader && authHeader.split(' ')[1]
