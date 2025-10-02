@@ -37,9 +37,9 @@ app.get("/", (req, res) => {
 });
 
 // Fallback 404
-app.use((req, res) => {
+/* app.use((req, res) => {
   res.status(404).json({ erro: "Rota não encontrada" });
-});
+}); */
 
 // ----------------- INICIAR SERVIDOR -----------------
 app.listen(PORT, () => {
