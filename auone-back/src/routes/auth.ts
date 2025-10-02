@@ -81,11 +81,18 @@ router.get('/perfil', async (req, res) => {
       return res.status(401).json({ erro: 'Token inválido' })
     }
 
+    console.log("validou o token")
+
     const usuario = await prisma.usuario.findUnique({
       where: { id: userId },
     })
 
+    console.log("buscou o usuario")
+    console.log(usuario)
+
     if (!usuario) return res.status(404).json({ erro: 'Usuário não encontrado' })
+
+    console.log("usuario encontrado")
 
     res.json(usuario)
   } catch (error) {

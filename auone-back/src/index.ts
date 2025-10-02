@@ -29,6 +29,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/dispositivos", dispositivosRoutes);
 app.use("/api/sensores", sensoresRoutes);
 app.use("/api/usuarios", usuariosRoutes);
+console.log("Rota de perfil criada com sucesso")
 app.use("/api/perfil", perfilRoutes);
 
 // Rota raiz
