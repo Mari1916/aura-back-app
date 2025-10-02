@@ -70,7 +70,7 @@ router.post("/login", async (req: Request, res: Response) => {
 
 router.get('/perfil', async (req, res) => {
   try {
-    const token = req.headers.authorization?.replace('Bearer ', '')
+    /* const token = req.headers.authorization?.replace('Bearer ', '')
     if (!token) return res.status(401).json({ erro: 'Token não fornecido' })
 
     let userId: string
@@ -80,21 +80,21 @@ router.get('/perfil', async (req, res) => {
     } catch (err) {
       return res.status(401).json({ erro: 'Token inválido' })
     }
-
+ */
     console.log("validou o token")
 
-    const usuario = await prisma.usuario.findUnique({
+    /* const usuario = await prisma.usuario.findUnique({
       where: { id: userId },
-    })
+    }) */
 
     console.log("buscou o usuario")
-    console.log(usuario)
+    console.log("usuario")
 
-    if (!usuario) return res.status(404).json({ erro: 'Usuário não encontrado' })
-
+   /*  if (!usuario) return res.status(404).json({ erro: 'Usuário não encontrado' })
+ */
     console.log("usuario encontrado")
 
-    res.json(usuario)
+    res.json("usuario")
   } catch (error) {
     console.error('Erro ao buscar perfil:', error)
     res.status(500).json({ erro: 'Erro interno do servidor' })
