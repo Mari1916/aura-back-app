@@ -83,16 +83,29 @@ router.get('/perfil', async (req, res) => {
     
     const usuario = await prisma.usuario.findUnique({
       where: { id: userId },
+      select: {
+        id: true,
+        nome: true,
+        email: true,
+        profissao: true,
+        empresa: true,
+        foto: true,
+        areaTotal: true,
+        cultivos: true,
+        dispositivosAtivos: true,
+        ultimaAtualizacao: true,
+      }
     })
 
     if (!usuario) return res.status(404).json({ erro: 'Usuário não encontrado' })
 
-    res.json("usuario")
+    res.json(usuario)
   } catch (error) {
     console.error('Erro ao buscar perfil:', error)
     res.status(500).json({ erro: 'Erro interno do servidor' })
   }
 })
+
 
 // Adiciona rota de atualização de perfil do usuário autenticado
 router.put('/atualizarPerfil', async (req, res) => {
