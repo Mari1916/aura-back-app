@@ -3,11 +3,17 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { PrismaClient } from "@prisma/client";
 import dotenv from "dotenv";
+import multer from 'multer';
 
 dotenv.config();
 
 const router = express.Router();
 const prisma = new PrismaClient();
+
+
+// Configura o multer para armazenar a imagem em memória
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
 const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) {
@@ -106,23 +112,38 @@ router.get('/perfil', async (req, res) => {
   }
 })
 
-
-// Adiciona rota de atualização de perfil do usuário autenticado
-router.put('/atualizarPerfil', async (req, res) => {
+// Rota de atualização de perfil com suporte a imagem
+router.put('/atualizarPerfil', upload.single('foto'), async (req, res) => {
   try {
-    const authHeader = req.headers['authorization']
-    const token = authHeader && authHeader.split(' ')[1]
-    if (!token) return res.status(401).json({ erro: 'Token não fornecido' })
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (!token) return res.status(401).json({ erro: 'Token não fornecido' });
 
-    let userId: string
+    let userId: string;
     try {
-      const decoded = jwt.verify(token, JWT_SECRET) as { id: string }
-      userId = decoded.id
+      const decoded = jwt.verify(token, JWT_SECRET) as { id: string };
+      userId = decoded.id;
     } catch (err) {
-      return res.status(401).json({ erro: 'Token inválido' })
+      return res.status(401).json({ erro: 'Token inválido' });
     }
 
-    const { nome, email, profissao, empresa, foto, areaTotal, cultivos, dispositivosAtivos } = req.body
+    const {
+      nome,
+      email,
+      profissao,
+      empresa,
+      areaTotal,
+      cultivos,
+      dispositivosAtivos,
+    } = req.body;
+
+    let fotoBase64: string | undefined;
+
+    // Se a imagem foi enviada, converte para base64
+    if (req.file) {
+      fotoBase64 = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+    }
+
     const usuario = await prisma.usuario.update({
       where: { id: userId },
       data: {
@@ -130,19 +151,20 @@ router.put('/atualizarPerfil', async (req, res) => {
         email,
         profissao,
         empresa,
-        foto,
+        foto: fotoBase64,
         areaTotal: areaTotal !== undefined ? Number(areaTotal) : undefined,
         cultivos,
         dispositivosAtivos: dispositivosAtivos !== undefined ? Number(dispositivosAtivos) : undefined,
         ultimaAtualizacao: new Date(),
       },
-    })
+    });
 
-    res.json(usuario)
+    res.json(usuario);
   } catch (error) {
-    res.status(500).json({ erro: 'Erro ao atualizar perfil', detalhe: String(error) })
+    res.status(500).json({ erro: 'Erro ao atualizar perfil', detalhe: String(error) });
   }
-})
+});
+
 
 
 // Rota para receber dados dos sensores (ESP32 envia via POST)
