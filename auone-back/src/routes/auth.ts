@@ -73,7 +73,7 @@ router.post("/login", async (req: Request, res: Response) => {
 });
 
 //ROTA DE DISPOSITIVOS
-router.post('/', async (req, res) => {
+router.post('/dispositivos', async (req, res) => {
   try {
     const { nome, deviceId, usuarioId } = req.body;
 
