@@ -206,7 +206,7 @@ router.put('/atualizarPerfil', upload.single('foto'), async (req, res) => {
 // Rota para receber dados dos sensores (ESP32 envia via POST)
 router.post('/sensores', async (req, res) => {
   try {
-    const { deviceId, umidadeSolo, luminosidade, temperaturaSolo, temperaturaAr } = req.body;
+    const { deviceId, umidadeSolo, luminosidade, umidadeAr, temperaturaAr } = req.body;
 
     const dispositivo = await prisma.dispositivo.findUnique({ where: { deviceId } });
     if (!dispositivo) {
@@ -218,7 +218,7 @@ router.post('/sensores', async (req, res) => {
         dispositivoId: dispositivo.id,
         umidadeSolo,
         luminosidade,
-        temperaturaSolo,
+        umidadeAr,
         temperaturaAr,
       },
     });

@@ -39,7 +39,7 @@ model DadoSensor {
   dispositivoId   String
   umidadeSolo     Float
   luminosidade    Float
-  temperaturaSolo Float
+  umidadeAr       Float
   temperaturaAr   Float
   criadoEm        DateTime     @default(now())
 }
