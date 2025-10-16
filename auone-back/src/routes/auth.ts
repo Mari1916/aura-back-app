@@ -1,7 +1,7 @@
 import express, { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, DadoSensor } from "@prisma/client";
 import dotenv from "dotenv";
 import multer from 'multer';
 
@@ -9,7 +9,6 @@ dotenv.config();
 
 const router = express.Router();
 const prisma = new PrismaClient();
-
 
 // Configura o multer para armazenar a imagem em memória
 const storage = multer.memoryStorage();
@@ -20,6 +19,26 @@ if (!JWT_SECRET) {
   console.error("⚠️ JWT_SECRET não definido no .env");
   process.exit(1);
 }
+
+// Tipo do último dado em memória
+interface UltimoDado {
+  deviceId: string;
+  temperaturaAr: number | null;
+  umidadeAr: number | null;
+  umidadeSolo: number | null;
+  luminosidade: number | null;
+  timestamp: string | null;
+}
+
+// Armazena o último pacote recebido do ESP32
+let ultimoDado: UltimoDado = {
+  deviceId: '',
+  temperaturaAr: null,
+  umidadeAr: null,
+  umidadeSolo: null,
+  luminosidade: null,
+  timestamp: null
+};
 
 // ==================== CADASTRO ====================
 router.post("/cadastro", async (req: Request, res: Response) => {
@@ -72,8 +91,8 @@ router.post("/login", async (req: Request, res: Response) => {
   }
 });
 
-//ROTA DE DISPOSITIVOS
-router.post('/dispositivos', async (req, res) => {
+// ==================== DISPOSITIVOS ====================
+router.post('/dispositivos', async (req: Request, res: Response) => {
   try {
     const { nome, deviceId, usuarioId } = req.body;
 
@@ -107,22 +126,20 @@ router.post('/dispositivos', async (req, res) => {
   }
 });
 
-
-// TESTE ROTA DE PERFIL
-
-router.get('/perfil', async (req, res) => {
+// ==================== PERFIL ====================
+router.get('/perfil', async (req: Request, res: Response) => {
   try {
-    const token = req.headers.authorization?.replace('Bearer ', '')
-    if (!token) return res.status(401).json({ erro: 'Token não fornecido' })
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (!token) return res.status(401).json({ erro: 'Token não fornecido' });
 
-    let userId: string
+    let userId: string;
     try {
-      const decoded = jwt.verify(token, JWT_SECRET) as { id: string }
-      userId = decoded.id
-    } catch (err) {
-      return res.status(401).json({ erro: 'Token inválido' })
+      const decoded = jwt.verify(token, JWT_SECRET) as { id: string };
+      userId = decoded.id;
+    } catch {
+      return res.status(401).json({ erro: 'Token inválido' });
     }
-    
+
     const usuario = await prisma.usuario.findUnique({
       where: { id: userId },
       select: {
@@ -137,19 +154,19 @@ router.get('/perfil', async (req, res) => {
         dispositivosAtivos: true,
         ultimaAtualizacao: true,
       }
-    })
+    });
 
-    if (!usuario) return res.status(404).json({ erro: 'Usuário não encontrado' })
+    if (!usuario) return res.status(404).json({ erro: 'Usuário não encontrado' });
 
-    res.json(usuario)
+    res.json(usuario);
   } catch (error) {
-    console.error('Erro ao buscar perfil:', error)
-    res.status(500).json({ erro: 'Erro interno do servidor' })
+    console.error('Erro ao buscar perfil:', error);
+    res.status(500).json({ erro: 'Erro interno do servidor' });
   }
-})
+});
 
-// Rota de atualização de perfil com suporte a imagem
-router.put('/atualizarPerfil', upload.single('foto'), async (req, res) => {
+// ==================== ATUALIZAR PERFIL ====================
+router.put('/atualizarPerfil', upload.single('foto'), async (req: Request, res: Response) => {
   try {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
@@ -159,7 +176,7 @@ router.put('/atualizarPerfil', upload.single('foto'), async (req, res) => {
     try {
       const decoded = jwt.verify(token, JWT_SECRET) as { id: string };
       userId = decoded.id;
-    } catch (err) {
+    } catch {
       return res.status(401).json({ erro: 'Token inválido' });
     }
 
@@ -174,8 +191,6 @@ router.put('/atualizarPerfil', upload.single('foto'), async (req, res) => {
     } = req.body;
 
     let fotoBase64: string | undefined;
-
-    // Se a imagem foi enviada, converte para base64
     if (req.file) {
       fotoBase64 = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
     }
@@ -201,75 +216,57 @@ router.put('/atualizarPerfil', upload.single('foto'), async (req, res) => {
   }
 });
 
-
-
-// Rota para receber dados dos sensores (ESP32 envia via POST)
-router.post('/sensores', async (req, res) => {
+// ==================== SENSORES ====================
+// Receber dados do ESP32 e salvar no banco
+router.post('/sensores', async (req: Request, res: Response) => {
   try {
-    const { deviceId, umidadeSolo, luminosidade, umidadeAr, temperaturaAr } = req.body;
+    const { deviceId, temperaturaAr, umidadeAr, umidadeSolo, luminosidade } = req.body;
+
+    if (!deviceId) {
+      return res.status(400).json({ erro: 'deviceId é obrigatório' });
+    }
+
+    // Atualiza o último dado em memória
+    ultimoDado = {
+      deviceId,
+      temperaturaAr,
+      umidadeAr,
+      umidadeSolo,
+      luminosidade,
+      timestamp: new Date().toISOString()
+    };
+
+    console.log('📦 Dados recebidos do ESP32:', ultimoDado);
 
     const dispositivo = await prisma.dispositivo.findUnique({ where: { deviceId } });
     if (!dispositivo) {
-      return res.status(404).json({ erro: 'Dispositivo não encontrado' });
+      return res.status(404).json({ erro: 'Dispositivo não encontrado no banco' });
     }
 
-    const dado = await prisma.dadoSensor.create({
+    const dadoSalvo: DadoSensor = await prisma.dadoSensor.create({
       data: {
         dispositivoId: dispositivo.id,
         umidadeSolo,
         luminosidade,
         umidadeAr,
-        temperaturaAr,
-      },
+        temperaturaAr
+      }
     });
 
-    res.status(201).json(dado);
+    res.status(201).json(dadoSalvo);
   } catch (error: unknown) {
+    console.error('Erro ao salvar dados do sensor:', error);
     if (error instanceof Error) {
-      res.status(500).json({ erro: 'Erro ao salvar dados do sensor', detalhe: error.message });
+      res.status(500).json({ erro: 'Erro ao salvar dados', detalhe: error.message });
     } else {
-      res.status(500).json({ erro: 'Erro desconhecido ao salvar dados', detalhe: String(error) });
+      res.status(500).json({ erro: 'Erro desconhecido', detalhe: String(error) });
     }
   }
 });
 
-// Rota para consultar dados por data (app usa via GET)
-router.get('/sensores/:deviceId', async (req, res) => {
-  try {
-    const { deviceId } = req.params;
-    const { dataInicio, dataFim } = req.query;
-
-    const dispositivo = await prisma.dispositivo.findUnique({ where: { deviceId } });
-    if (!dispositivo) {
-      return res.status(404).json({ erro: 'Dispositivo não encontrado' });
-    }
-
-    const inicio = new Date(dataInicio as string);
-    const fim = new Date(dataFim as string);
-
-    if (isNaN(inicio.getTime()) || isNaN(fim.getTime())) {
-      return res.status(400).json({ erro: 'Datas inválidas' });
-    }
-
-    const dados = await prisma.dadoSensor.findMany({
-      where: {
-        dispositivoId: dispositivo.id,
-        criadoEm: {
-          gte: inicio,
-          lte: fim,
-        },
-      },
-      orderBy: { criadoEm: 'asc' },
-    });
-
-    res.json(dados);
-  } catch (error: unknown) {
-    if (error instanceof Error) {
-      res.status(500).json({ erro: 'Erro ao consultar dados', detalhe: error.message });
-    } else {
-      res.status(500).json({ erro: 'Erro desconhecido ao consultar dados', detalhe: String(error) });
-    }
-  }
+// Enviar o último dado ao front
+router.get('/sensores', (req: Request, res: Response) => {
+  res.json(ultimoDado);
 });
 
 export default router;
