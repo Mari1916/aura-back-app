@@ -1,0 +1,41 @@
+```html
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Perfil Usuário</title>
+</head>
+<body>
+  <h1>Dados do Perfil</h1>
+  <button id="carregarPerfil">Carregar Perfil</button>
+  <pre id="resultado"></pre>
+
+  <script>
+    document.getElementById("carregarPerfil").addEventListener("click", async () => {
+      const token = localStorage.getItem("token"); // token salvo no login
+      const resultado = document.getElementById("resultado");
+
+      try {
+        const res = await fetch("https://aura-back-app.onrender.com/api/auth/perfil", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}` // Envia o token no header
+          }
+        });
+
+        if (!res.ok) {
+          throw new Error("Erro ao buscar perfil: " + res.status);
+        }
+
+        const data = await res.json();
+        resultado.textContent = JSON.stringify(data, null, 2);
+      } catch (err) {
+        resultado.textContent = err.message;
+      }
+    });
+  </script>
+</body>
+</html>
+```
