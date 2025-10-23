@@ -3,43 +3,43 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql" 
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 model Usuario {
-  id                  String       @id @default(uuid())
-  nome                String?
-  email               String       @unique
-  senhaHash           String
-  profissao           String?
-  empresa             String?
-  dispositivos         Dispositivo[]
-  criadoEm            DateTime     @default(now())
-  foto                String?
-  areaTotal           Float?
-  cultivos            String?
-  dispositivosAtivos  Int?
-  ultimaAtualizacao   DateTime?
+  id                 String        @id @default(uuid())
+  nome               String?
+  email              String        @unique
+  senhaHash          String
+  profissao          String?
+  empresa            String?
+  criadoEm           DateTime      @default(now())
+  foto               String?
+  areaTotal          Float?
+  cultivos           String?
+  dispositivosAtivos Int?
+  ultimaAtualizacao  DateTime?
+  dispositivos       Dispositivo[]
 }
 
 model Dispositivo {
-  id          String       @id @default(uuid())
-  nome        String
-  deviceId    String       @unique
-  usuario     Usuario      @relation(fields: [usuarioId], references: [id])
-  usuarioId   String
-  sensores    DadoSensor[]
-  criadoEm    DateTime     @default(now())
+  id        String       @id @default(uuid())
+  nome      String
+  deviceId  String       @unique
+  usuarioId String
+  criadoEm  DateTime     @default(now())
+  sensores  DadoSensor[]
+  usuario   Usuario      @relation(fields: [usuarioId], references: [id])
 }
 
 model DadoSensor {
-  id              String       @id @default(uuid())
-  dispositivo     Dispositivo  @relation(fields: [dispositivoId], references: [id])
-  dispositivoId   String
-  umidadeSolo     Float
-  luminosidade    Float
-  umidadeAr       Float
-  temperaturaAr   Float
-  criadoEm        DateTime     @default(now())
+  id            String      @id @default(uuid())
+  dispositivoId String
+  umidadeSolo   Float
+  luminosidade  Float
+  umidadeAr     Float
+  temperaturaAr Float
+  criadoEm      DateTime    @default(now())
+  dispositivo   Dispositivo @relation(fields: [dispositivoId], references: [id])
 }
