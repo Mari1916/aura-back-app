@@ -272,6 +272,7 @@ router.post('/sensores', async (req: Request, res: Response) => {
         dispositivoId: dispositivo.id,
         umidadeSolo: umidadeSolo!,
         luminosidade: luminosidade!,
+        umidadeAr: umidadeAr!,
         temperaturaAr: temperaturaAr!
       }
     });
