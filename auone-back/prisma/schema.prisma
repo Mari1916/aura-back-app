@@ -36,11 +36,10 @@ model Dispositivo {
 model DadoSensor {
   id            String      @id @default(uuid())
   dispositivoId String
-  umidadeSolo   Float?
-  luminosidade  Float?
-  umidadeAr     Float?
-  temperaturaAr Float?
+  umidadeSolo   Float
+  luminosidade  Float
+  umidadeAr     Float
+  temperaturaAr Float
   criadoEm      DateTime    @default(now())
   dispositivo   Dispositivo @relation(fields: [dispositivoId], references: [id])
 }
-
