@@ -20,9 +20,22 @@ async function startupChecks() {
   }
 
   try {
-    // Try to connect to the database to surface connectivity / credential issues early.
-    await prismaHealth.$connect();
-    console.log("✅ Database connection successful (startup check)");
+    // Try to connect to the database with retries
+    let retries = 5;
+    while (retries > 0) {
+      try {
+        await prismaHealth.$connect();
+        console.log("✅ Database connection successful (startup check)");
+        break;
+      } catch (error) {
+        retries--;
+        if (retries === 0) {
+          throw error;
+        }
+        console.log(`Retrying database connection... (${retries} attempts left)`);
+        await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5 seconds before retrying
+      }
+    }
   } catch (err) {
     console.error("❌ Failed to connect to the database during startup check:", err instanceof Error ? err.message : String(err));
     process.exit(1);
