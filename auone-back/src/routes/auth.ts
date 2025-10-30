@@ -270,7 +270,6 @@ router.post('/sensores', async (req: Request, res: Response) => {
     const dadoSalvo = await prisma.dadoSensor.create({
       data: {
         dispositivoId: dispositivo.id,
-        // já validados acima, usar '!' para afirmar que não são null
         umidadeSolo: umidadeSolo!,
         luminosidade: luminosidade!,
         umidadeAr: umidadeAr!,
