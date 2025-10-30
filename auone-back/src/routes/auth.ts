@@ -8,7 +8,8 @@ import multer from 'multer';
 dotenv.config();
 
 const router = express.Router();
-const prisma = new PrismaClient();
+// Enable Prisma detailed logging to help diagnose runtime DB errors (queries, warnings, errors)
+const prisma = new PrismaClient({ log: ["query", "info", "warn", "error"] });
 
 // Configura o multer para armazenar a imagem em memória
 const storage = multer.memoryStorage();
@@ -62,7 +63,12 @@ router.post("/cadastro", async (req: Request, res: Response) => {
 
     res.status(201).json({ usuario, token });
   } catch (error) {
-    console.error("Erro no cadastro:", error);
+    // Log full stack when available to help debugging in production logs
+    if (error instanceof Error) {
+      console.error("Erro no cadastro:", error.stack || error.message);
+    } else {
+      console.error("Erro no cadastro:", error);
+    }
     res.status(500).json({ erro: "Erro ao cadastrar usuário" });
   }
 });
