@@ -8,10 +8,19 @@ import dispositivosRoutes from "./routes/dispositivos";
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = parseInt(process.env.PORT || '3000', 10);
+
+console.log(`Iniciando servidor na porta ${PORT}...`);
 
 // Quick runtime checks to fail fast when required env vars or DB are absent
-const prismaHealth = new PrismaClient();
+const prismaHealth = new PrismaClient({
+  datasources: {
+    db: {
+      url: process.env.DATABASE_URL
+    },
+  },
+  log: ['error', 'warn'],
+});
 
 async function startupChecks() {
   if (!process.env.DATABASE_URL) {
@@ -20,24 +29,24 @@ async function startupChecks() {
   }
 
   try {
-    // Try to connect to the database with retries
+    // Tentar a conexão com o banco de dados a td custo
     let retries = 5;
     while (retries > 0) {
       try {
         await prismaHealth.$connect();
-        console.log("✅ Database connection successful (startup check)");
+        console.log("✅ A conexão foi um sucesso!!");
         break;
       } catch (error) {
         retries--;
         if (retries === 0) {
           throw error;
         }
-        console.log(`Retrying database connection... (${retries} attempts left)`);
+        console.log(`Tentando a conexão dnv (${retries} attempts left)`);
         await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5 seconds before retrying
       }
     }
   } catch (err) {
-    console.error("❌ Failed to connect to the database during startup check:", err instanceof Error ? err.message : String(err));
+    console.error("❌ Falhou a conexão:", err instanceof Error ? err.message : String(err));
     process.exit(1);
   } finally {
     await prismaHealth.$disconnect();
@@ -73,6 +82,9 @@ app.get("/", (req, res) => {
 }); */
 
 // ----------------- INICIAR SERVIDOR -----------------
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Servidor rodando em http://0.0.0.0:${PORT}`);
+});
 // Start server after startup checks
 (async () => {
   await startupChecks();
