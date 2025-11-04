@@ -8,7 +8,14 @@ import multer from 'multer';
 dotenv.config();
 
 const router = express.Router();
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  datasources: {
+    db: {
+      url: process.env.DATABASE_URL,
+    },
+  },
+});
+
 
 // Configura o multer para armazenar a imagem em memória
 const storage = multer.memoryStorage();
