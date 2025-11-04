@@ -6,7 +6,10 @@
     "migration": "npx prisma migrate --dev addUmidadeAr",
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "start:deploy": "npx prisma migrate deploy && node dist/index.js",
+    "prisma:deploy": "npx prisma migrate deploy",
+    "test:pg": "node test-pg-conn.js"
   },
   "dependencies": {
     "@prisma/client": "^6.18.0",
