@@ -61,9 +61,18 @@ router.post("/cadastro", async (req: Request, res: Response) => {
     const token = jwt.sign({ id: usuario.id }, JWT_SECRET, { expiresIn: "7d" });
 
     res.status(201).json({ usuario, token });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Erro no cadastro:", error);
-    res.status(500).json({ erro: "Erro ao cadastrar usuário" });
+    // Em desenvolvimento, retorne detalhe do erro para facilitar o debug.
+    if (process.env.NODE_ENV !== 'production') {
+      if (error instanceof Error) {
+        return res.status(500).json({ erro: 'Erro ao cadastrar usuário', detalhe: error.message, stack: error.stack });
+      }
+      return res.status(500).json({ erro: 'Erro ao cadastrar usuário', detalhe: String(error) });
+    }
+
+    // Em produção, mantenha a resposta genérica para não vazar detalhes sensíveis.
+    res.status(500).json({ erro: 'Erro ao cadastrar usuário' });
   }
 });
 
