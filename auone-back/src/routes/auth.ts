@@ -1,15 +1,14 @@
 import express, { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, DadoSensor } from "@prisma/client";
 import dotenv from "dotenv";
 import multer from 'multer';
 
 dotenv.config();
 
 const router = express.Router();
-// Enable Prisma detailed logging to help diagnose runtime DB errors (queries, warnings, errors)
-const prisma = new PrismaClient({ log: ["query", "info", "warn", "error"] });
+const prisma = new PrismaClient();
 
 // Configura o multer para armazenar a imagem em memória
 const storage = multer.memoryStorage();
@@ -63,12 +62,7 @@ router.post("/cadastro", async (req: Request, res: Response) => {
 
     res.status(201).json({ usuario, token });
   } catch (error) {
-    // Log full stack when available to help debugging in production logs
-    if (error instanceof Error) {
-      console.error("Erro no cadastro:", error.stack || error.message);
-    } else {
-      console.error("Erro no cadastro:", error);
-    }
+    console.error("Erro no cadastro:", error);
     res.status(500).json({ erro: "Erro ao cadastrar usuário" });
   }
 });
@@ -226,34 +220,10 @@ router.put('/atualizarPerfil', upload.single('foto'), async (req: Request, res: 
 // Receber dados do ESP32 e salvar no banco
 router.post('/sensores', async (req: Request, res: Response) => {
   try {
-    const { deviceId } = req.body;
+    const { deviceId, temperaturaAr, umidadeAr, umidadeSolo, luminosidade } = req.body;
 
     if (!deviceId) {
       return res.status(400).json({ erro: 'deviceId é obrigatório' });
-    }
-
-    // Função auxiliar para converter em número e tratar NaN
-    const parseNumber = (v: any): number | null => {
-      if (v === undefined || v === null || v === '') return null;
-      const n = Number(v);
-      return Number.isNaN(n) ? null : n;
-    };
-
-    // Converte os valores recebidos para number | null
-    const temperaturaAr = parseNumber(req.body.temperaturaAr);
-    const umidadeAr = parseNumber(req.body.umidadeAr);
-    const umidadeSolo = parseNumber(req.body.umidadeSolo);
-    const luminosidade = parseNumber(req.body.luminosidade);
-
-    // Verifica campos numéricos obrigatórios (conforme schema.prisma eles são required)
-    const missingFields: string[] = [];
-    if (temperaturaAr === null) missingFields.push('temperaturaAr');
-    if (umidadeAr === null) missingFields.push('umidadeAr');
-    if (umidadeSolo === null) missingFields.push('umidadeSolo');
-    if (luminosidade === null) missingFields.push('luminosidade');
-
-    if (missingFields.length > 0) {
-      return res.status(400).json({ erro: 'Campos numéricos obrigatórios ausentes ou inválidos', campos: missingFields });
     }
 
     // Atualiza o último dado em memória
@@ -273,13 +243,13 @@ router.post('/sensores', async (req: Request, res: Response) => {
       return res.status(404).json({ erro: 'Dispositivo não encontrado no banco' });
     }
 
-    const dadoSalvo = await prisma.dadoSensor.create({
+    const dadoSalvo: DadoSensor = await prisma.dadoSensor.create({
       data: {
         dispositivoId: dispositivo.id,
-        umidadeSolo: umidadeSolo!,
-        luminosidade: luminosidade!,
-        umidadeAr: umidadeAr!,
-        temperaturaAr: temperaturaAr!
+        umidadeSolo,
+        luminosidade,
+        umidadeAr,
+        temperaturaAr
       }
     });
 
