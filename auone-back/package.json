@@ -26,6 +26,7 @@
     "@types/multer": "^2.0.0",
     "@types/node": "^24.3.1",
     "nodemon": "^3.1.10",
+    "pg": "^8.16.3",
     "prisma": "^6.18.0",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
