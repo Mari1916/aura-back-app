@@ -52,36 +52,55 @@ router.post("/cadastro", async (req: Request, res: Response) => {
   try {
     const { nome, email, senha, profissao, empresa } = req.body;
 
+    // Validação básica
     if (!nome || !email || !senha || !profissao || !empresa) {
-      return res.status(400).json({ erro: "Preencha todos os campos" });
+      return res.status(400).json({ erro: "Preencha todos os campos obrigatórios." });
     }
 
+    // Validação de e-mail
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ erro: "E-mail inválido." });
+    }
+
+    // Validação de senha
+    if (senha.length < 6) {
+      return res.status(400).json({ erro: "A senha deve ter pelo menos 6 caracteres." });
+    }
+
+    // Verifica se o e-mail já está cadastrado
     const existe = await prisma.usuario.findUnique({ where: { email } });
-    if (existe) return res.status(400).json({ erro: "E-mail já cadastrado" });
+    if (existe) {
+      return res.status(400).json({ erro: "E-mail já cadastrado." });
+    }
 
     const senhaHash = await bcrypt.hash(senha, 10);
 
     const usuario = await prisma.usuario.create({
-      data: { nome, email, senhaHash, profissao, empresa },
+      data: {
+        nome,
+        email,
+        senhaHash,
+        profissao,
+        empresa,
+      },
     });
 
     const token = jwt.sign({ id: usuario.id }, JWT_SECRET, { expiresIn: "7d" });
 
     res.status(201).json({ usuario, token });
   } catch (error: unknown) {
-    console.error("Erro no cadastro:", error);
-    // Em desenvolvimento, retorne detalhe do erro para facilitar o debug.
-    if (process.env.NODE_ENV !== 'production') {
-      if (error instanceof Error) {
-        return res.status(500).json({ erro: 'Erro ao cadastrar usuário', detalhe: error.message, stack: error.stack });
-      }
-      return res.status(500).json({ erro: 'Erro ao cadastrar usuário', detalhe: String(error) });
+    console.error("❌ Erro no cadastro:", error);
+    if (error instanceof Error) {
+      return res.status(500).json({
+        erro: "Erro ao cadastrar usuário",
+        detalhe: error.message,
+      });
     }
-
-    // Em produção, mantenha a resposta genérica para não vazar detalhes sensíveis.
-    res.status(500).json({ erro: 'Erro ao cadastrar usuário' });
+    res.status(500).json({ erro: "Erro desconhecido ao cadastrar usuário" });
   }
 });
+
 
 // ==================== LOGIN ====================
 router.post("/login", async (req: Request, res: Response) => {
