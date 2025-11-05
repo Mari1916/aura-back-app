@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import { PrismaClient } from "@prisma/client";
 
 import authRoutes from "./routes/auth";
 import dispositivosRoutes from "./routes/dispositivos";
