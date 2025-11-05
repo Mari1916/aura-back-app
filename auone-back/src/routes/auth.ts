@@ -11,6 +11,18 @@ const router = express.Router();
 
 const prisma = new PrismaClient();
 
+async function startServer() {
+  try {
+    await prisma.$connect();
+    console.log('✅ Conectado ao banco com sucesso!');
+    // inicia seu servidor Express aqui
+  } catch (error) {
+    console.error('❌ Erro ao conectar no banco:', error);
+  }
+}
+
+startServer();
+
 // Configura o multer para armazenar a imagem em memória
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
