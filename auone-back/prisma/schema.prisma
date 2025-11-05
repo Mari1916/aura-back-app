@@ -9,11 +9,11 @@ datasource db {
 
 model Usuario {
   id                 String        @id @default(uuid())
-  nome               String?
+  nome               String        
   email              String        @unique
   senhaHash          String
-  profissao          String?
-  empresa            String?
+  profissao          String        
+  empresa            String        
   criadoEm           DateTime      @default(now())
   foto               String?
   areaTotal          Float?
@@ -22,6 +22,7 @@ model Usuario {
   ultimaAtualizacao  DateTime?
   dispositivos       Dispositivo[]
 }
+
 
 model Dispositivo {
   id        String       @id @default(uuid())
