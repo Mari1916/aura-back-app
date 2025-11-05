@@ -9,27 +9,7 @@ dotenv.config();
 
 const router = express.Router();
 
-const globalForPrisma = global as unknown as { prisma: PrismaClient };
-export const prisma =
-  globalForPrisma.prisma ||
-  new PrismaClient({
-    datasources: {
-      db: {
-        url: process.env.DATABASE_URL,
-      },
-    },
-  });
-
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
-
-// ✅ Conexão explícita com o banco
-prisma
-  .$connect()
-  .then(() => console.log("✅ Conectado ao banco de dados"))
-  .catch((err) => {
-    console.error("❌ Erro ao conectar ao banco:", err);
-    process.exit(1);
-  });
+const prisma = new PrismaClient();
 
 // Configura o multer para armazenar a imagem em memória
 const storage = multer.memoryStorage();
