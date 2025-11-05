@@ -52,6 +52,9 @@ router.post("/cadastro", async (req: Request, res: Response) => {
   try {
     const { nome, email, senha, profissao, empresa } = req.body;
 
+    // Log para debug
+    console.log("📨 Dados recebidos:", { nome, email, senha, profissao, empresa });
+
     // Validação básica
     if (!nome || !email || !senha || !profissao || !empresa) {
       return res.status(400).json({ erro: "Preencha todos os campos obrigatórios." });
@@ -76,13 +79,14 @@ router.post("/cadastro", async (req: Request, res: Response) => {
 
     const senhaHash = await bcrypt.hash(senha, 10);
 
+    // Criação do usuário com proteção contra undefined
     const usuario = await prisma.usuario.create({
       data: {
-        nome,
+        nome: nome || "",
         email,
         senhaHash,
-        profissao,
-        empresa,
+        profissao: profissao || "",
+        empresa: empresa || "",
       },
     });
 
@@ -90,7 +94,7 @@ router.post("/cadastro", async (req: Request, res: Response) => {
 
     res.status(201).json({ usuario, token });
   } catch (error: unknown) {
-    console.error("❌ Erro no cadastro:", error);
+    console.error("❌ Erro completo no cadastro:", error);
     if (error instanceof Error) {
       return res.status(500).json({
         erro: "Erro ao cadastrar usuário",
