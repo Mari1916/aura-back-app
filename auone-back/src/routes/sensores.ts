@@ -29,7 +29,7 @@ let ultimoDado: UltimoDado = {
 
 // ==================== SENSORES ====================
 // Receber dados do ESP32 e salvar no banco
-router.post('/sensores', async (req: Request, res: Response) => {
+router.post('/', async (req: Request, res: Response) => {
   try {
     const { deviceId, temperaturaAr, umidadeAr, umidadeSolo, luminosidade } = req.body;
 
