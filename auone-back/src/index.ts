@@ -5,6 +5,9 @@ import dotenv from "dotenv";
 import authRoutes from "./routes/auth";
 import dispositivosRoutes from "./routes/dispositivos";
 import sensoresRoutes from "./routes/sensores";
+import chatRouter from "./routes/chat";
+
+
 dotenv.config();
 
 const app = express();
@@ -26,7 +29,7 @@ console.log("Criando rota de perfil...")
 app.use("/api/auth", authRoutes);
 app.use("/api/dispositivo", dispositivosRoutes);
 app.use("/api/sensores", sensoresRoutes);
-
+app.use('/chat', chatRouter);
 
 // Rota raiz
 app.get("/", (req, res) => {
