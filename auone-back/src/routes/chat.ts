@@ -2,85 +2,130 @@
 
 import { Request, Response, Router } from "express";
 import OpenAI from 'openai';
-import 'dotenv/config'; 
+import 'dotenv/config';
+import { PrismaClient } from '@prisma/client';
+import { ChatCompletionMessageParam } from "openai/resources/chat/completions";
 
-
-const openai = new OpenAI(); 
+const openai = new OpenAI();
 const chatRouter = Router();
+// Certifique-se de que o PrismaClient está sendo inicializado corretamente,
+// preferencialmente de forma centralizada. Aqui, criamos uma nova instância:
+const prisma = new PrismaClient();
 
+const SYSTEM_MESSAGE_CONTENT = "Você é um assistente de IA prestativo, especialista e amigável. Suas respostas devem ser concisas e em português.";
 
-// Em produção, isso deve ir para um DB ou cache (ex: Redis).
-const conversations: { [key: string]: Array<OpenAI.Chat.Completions.ChatCompletionMessageParam> } = {};
-
-// Mensagem de Sistema Aprimorada para garantir o foco em Detecção e Solução
-const systemMessage: OpenAI.Chat.Completions.ChatCompletionMessageParam = {
-    role: "system",
-    content: "Você é um assistente de IA especialista em detecção e solução de pragas, focado em agricultura e jardinagem. Sua tarefa é analisar a descrição da praga fornecida pelo usuário, identificar o tipo mais provável (nome da praga ou doença), e, **em seguida**, sugerir a solução mais eficaz. A resposta deve ser **direta**, **concisa** e seguir estritamente o formato: **Praga Detectada:** [Nome da Praga]. **Solução Sugerida:** [Medida de controle]."
-};
-
+// ----------------------------------------------------
+// POST /chat/message: Envia mensagem e persiste o histórico
+// Espera: { userId: string, message: string, conversaId?: string }
+// ----------------------------------------------------
 chatRouter.post('/message', async (req: Request, res: Response) => {
-    const { userId, message } = req.body;
+    const { userId, message, conversaId: inputConversaId } = req.body;
 
     if (!userId || !message) {
         return res.status(400).json({ error: "userId e message são obrigatórios." });
     }
 
-    try {
-        // 1. Carrega ou Inicializa o histórico com a System Message
-        if (!conversations[userId]) {
-            // A System Message é sempre a primeira
-            conversations[userId] = [systemMessage]; 
-        }
-        
-        // 2. Adiciona a nova mensagem do usuário ao histórico
-        const userMessage: OpenAI.Chat.Completions.ChatCompletionMessageParam = { role: "user", content: message };
-        conversations[userId].push(userMessage);
+    let currentConversaId = inputConversaId;
 
-        // 3. Chama a API da OpenAI com o histórico COMPLETO
-        const completion = await openai.chat.completions.create({
-            model: "gpt-3.5-turbo", // Bom para custo-benefício e tarefas de chat
-            messages: conversations[userId], // Passa o histórico completo
+    try {
+        // 1. GERENCIAMENTO DA CONVERSA: Encontra ou cria a conversa
+        if (!currentConversaId) {
+            // Se o cliente não enviou um conversaId, tenta encontrar a mais recente
+            let conversa = await prisma.conversa.findFirst({
+                where: { usuarioId: userId },
+                orderBy: { criadoEm: 'desc' }
+            });
+
+            if (!conversa) {
+                // Se não houver conversas, cria uma nova
+                conversa = await prisma.conversa.create({
+                    data: { usuarioId: userId, titulo: "Nova Conversa de " + userId.substring(0, 5) }
+                });
+            }
+            currentConversaId = conversa.id;
+        }
+
+        // 2. CARREGA O HISTÓRICO: Busca as mensagens pelo ID da conversa
+        const history = await prisma.chatMessage.findMany({
+            where: { conversaId: currentConversaId },
+            orderBy: { createdAt: 'asc' },
+            select: { role: true, content: true }
         });
 
-        // 4. Extrai a resposta e verifica se é válida
+        // 3. FORMATA E ADICIONA MENSAGENS PARA A OPENAI
+        let messagesForOpenAI: ChatCompletionMessageParam[] = history.map((msg: { role: string; content: string }) => ({
+            role: msg.role as 'user' | 'assistant',
+            content: msg.content
+        }));
+
+        // Adiciona a mensagem do sistema no início, se o histórico estiver vazio
+        if (messagesForOpenAI.length === 0 || messagesForOpenAI[0].role !== 'system') {
+            messagesForOpenAI.unshift({ role: "system", content: SYSTEM_MESSAGE_CONTENT });
+        }
+
+        // Adiciona a nova mensagem do usuário
+        const userMessage = { role: "user", content: message };
+        messagesForOpenAI.push(userMessage as ChatCompletionMessageParam);
+
+
+        // 4. CHAMA A API da OpenAI
+        const completion = await openai.chat.completions.create({
+            model: "gpt-3.5-turbo",
+            messages: messagesForOpenAI,
+        });
+
         const assistantResponse = completion.choices[0].message;
 
-        if (!assistantResponse.content) {
-             // Tratamento para resposta vazia, remove a mensagem do usuário do histórico e lança erro
-            conversations[userId]?.pop();
-            return res.status(500).json({ error: "A IA não conseguiu gerar uma resposta válida." });
-        }
-        
-        // 5. Salva a resposta do assistente no histórico
-        conversations[userId].push(assistantResponse);
+        // 5. SALVA NO BANCO (Transação para garantir que ambas sejam salvas)
+        await prisma.$transaction([
+            // Salva a mensagem do usuário
+            prisma.chatMessage.create({
+                data: {
+                    conversaId: currentConversaId,
+                    content: userMessage.content,
+                    role: userMessage.role,
+                }
+            }),
+            // Salva a resposta do assistente
+            prisma.chatMessage.create({
+                data: {
+                    conversaId: currentConversaId,
+                    content: assistantResponse.content || '',
+                    role: assistantResponse.role,
+                }
+            })
+        ]);
 
-        // 6. Retorna a resposta
-        return res.json({ 
+        // 6. Retorna a resposta ao frontend
+        return res.json({
             response: assistantResponse.content,
-            userId: userId 
+            conversaId: currentConversaId // Retorna o ID da conversa para que o frontend possa usá-lo
         });
 
     } catch (error) {
-        console.error("Erro na comunicação com a OpenAI:", error);
-        
-        // Remove a última mensagem do usuário do histórico se a API falhar
-        conversations[userId]?.pop(); 
-        
-        return res.status(500).json({ error: "Erro interno: Não foi possível processar a mensagem com a IA." });
+        console.error("Erro na comunicação ou no banco de dados:", error);
+        return res.status(500).json({ error: "Erro interno no servidor ao processar a requisição de chat." });
     }
 });
 
-// --- Rota para Limpar o Histórico ---
+// A rota de limpeza de histórico agora deleta a Conversa e todas as ChatMessages relacionadas
+chatRouter.delete('/clear/:conversaId', async (req: Request, res: Response) => {
+    const { conversaId } = req.params;
 
-chatRouter.get('/clear/:userId', (req: Request, res: Response) => {
-    const { userId } = req.params;
+    try {
+        await prisma.conversa.delete({
+            where: { id: conversaId }
+        });
 
-    if (conversations[userId]) {
-        delete conversations[userId];
-        return res.json({ message: "Histórico de conversa limpo com sucesso.", userId });
+        // As ChatMessages serão excluídas automaticamente se você configurou
+        // onDelete: Cascade no seu schema, mas a exclusão da conversa já é suficiente.
+
+        return res.json({ message: "Conversa e histórico excluídos com sucesso.", conversaId });
+
+    } catch (error) {
+        console.error("Erro ao excluir a conversa:", error);
+        return res.status(500).json({ error: "Erro ao excluir a conversa no banco de dados." });
     }
-    
-    return res.status(404).json({ error: "Conversa não encontrada para este usuário." });
 });
 
 export default chatRouter;

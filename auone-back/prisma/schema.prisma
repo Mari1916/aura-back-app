@@ -8,19 +8,21 @@ datasource db {
 }
 
 model Usuario {
-  id                 String        @id @default(uuid())
-  nome               String        
-  email              String        @unique
-  senhaHash          String
-  profissao          String        
-  empresa            String        
-  criadoEm           DateTime      @default(now())
-  foto               String?
-  areaTotal          Float?
-  cultivos           String?
-  dispositivosAtivos Int?
-  ultimaAtualizacao  DateTime?
-  dispositivos       Dispositivo[]
+  id                  String           @id @default(uuid())
+  nome                String
+  email               String           @unique
+  senhaHash           String
+  profissao           String
+  empresa             String
+  criadoEm            DateTime         @default(now())
+  foto                String?
+  areaTotal           Float?
+  cultivos            String?
+  dispositivosAtivos  Int?
+  ultimaAtualizacao   DateTime?
+  dispositivos        Dispositivo[]
+  
+ 
 }
 
 
@@ -44,3 +46,5 @@ model DadoSensor {
   criadoEm      DateTime    @default(now())
   dispositivo   Dispositivo @relation(fields: [dispositivoId], references: [id])
 }
+
+

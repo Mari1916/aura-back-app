@@ -5,7 +5,7 @@ import dotenv from "dotenv";
 import authRoutes from "./routes/auth";
 import dispositivosRoutes from "./routes/dispositivos";
 import sensoresRoutes from "./routes/sensores";
-import chatRoutes from "./routes/chat";
+import chatRoutes from "./routes/chatService";
 
 
 dotenv.config();
