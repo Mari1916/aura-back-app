@@ -1,8 +1,8 @@
 import express from "express";
-import { corsConfig } from "../src/middlewares/corsConfig";
-import { bodyParser } from "../src/middlewares/bodyParser";
-import { notFound } from "../src/middlewares/notFound";
-import { setupRoutes } from "../src/routes";
+import { corsConfig } from "../middlewares/corsConfig";
+import { bodyParser } from "../middlewares/bodyParser";
+import { notFound } from "../middlewares/notFound";
+import { setupRoutes } from "../routes";
 
 export const createServer = () => {
   const app = express();
