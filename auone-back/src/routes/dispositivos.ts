@@ -4,10 +4,12 @@ import { PrismaClient } from '@prisma/client';
 const router = Router();
 const prisma = new PrismaClient();
 
-// POST /api/dispositivos
+// POST /api/dispositivo
 router.post('/', async (req, res) => {
   try {
     const { nome, deviceId, usuarioId } = req.body;
+
+    console.log('Dados recebidos:', req.body); // 👈 ajuda a debugar
 
     if (!nome || !deviceId || !usuarioId) {
       return res.status(400).json({ erro: 'Campos obrigatórios ausentes' });
@@ -18,7 +20,7 @@ router.post('/', async (req, res) => {
         nome,
         deviceId,
         usuario: {
-          connect: { id: usuarioId },
+          connect: { id: usuarioId }, // conecta ao usuário existente
         },
       },
     });
