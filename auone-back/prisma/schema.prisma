@@ -8,23 +8,20 @@ datasource db {
 }
 
 model Usuario {
-  id                  String           @id @default(uuid())
-  nome                String
-  email               String           @unique
-  senhaHash           String
-  profissao           String
-  empresa             String
-  criadoEm            DateTime         @default(now())
-  foto                String?
-  areaTotal           Float?
-  cultivos            String?
-  dispositivosAtivos  Int?
-  ultimaAtualizacao   DateTime?
-  dispositivos        Dispositivo[]
-  
- 
+  id                 String        @id @default(uuid())
+  nome               String
+  email              String        @unique
+  senhaHash          String
+  profissao          String
+  empresa            String
+  criadoEm           DateTime      @default(now())
+  foto               String?
+  areaTotal          Float?
+  cultivos           String?
+  dispositivosAtivos Int?
+  ultimaAtualizacao  DateTime?
+  dispositivos       Dispositivo[]
 }
-
 
 model Dispositivo {
   id        String       @id @default(uuid())
@@ -51,4 +48,3 @@ model Conversa {
   id        String   @id @default(uuid())
   createdAt DateTime @default(now())
 }
-
