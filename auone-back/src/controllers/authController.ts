@@ -92,9 +92,18 @@ export const perfilUsuario = async (req: Request, res: Response) => {
         areaTotal: true,
         cultivos: true,
         dispositivosAtivos: true,
-        ultimaAtualizacao: true
-      }
+        ultimaAtualizacao: true,
+        dispositivos: {
+          select: {
+            id: true,
+            nome: true,
+            deviceId: true,
+            criadoEm: true,
+          },
+        },
+      },
     });
+
 
     if (!usuario) return res.status(404).json({ erro: "Usuário não encontrado" });
 
