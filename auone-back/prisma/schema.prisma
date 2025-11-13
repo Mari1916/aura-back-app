@@ -47,4 +47,8 @@ model DadoSensor {
   dispositivo   Dispositivo @relation(fields: [dispositivoId], references: [id])
 }
 
+model Conversa {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+}
 

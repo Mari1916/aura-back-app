@@ -1,9 +1,9 @@
 import { Router } from "express";
-import { enviarMensagemChat, limparConversa } from "../controllers/chatController";
+import { limparConversa } from "../controllers/chatController";
 
 const chatRouter = Router();
 
-chatRouter.post("/message", enviarMensagemChat);
+// Apenas rota de exclusão de conversa
 chatRouter.delete("/clear/:conversaId", limparConversa);
 
 export default chatRouter;
