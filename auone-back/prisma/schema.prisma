@@ -20,6 +20,7 @@ model Usuario {
   cultivos           String?
   dispositivosAtivos Int?
   ultimaAtualizacao  DateTime?
+  conversas          Conversa[]
   dispositivos       Dispositivo[]
 }
 
@@ -45,6 +46,20 @@ model DadoSensor {
 }
 
 model Conversa {
-  id        String   @id @default(uuid())
-  createdAt DateTime @default(now())
+  id           String        @id @default(uuid())
+  atualizadoEm DateTime      @default(now())
+  criadoEm     DateTime      @default(now())
+  titulo       String?
+  usuarioId    String
+  mensagens    ChatMessage[]
+  usuario      Usuario       @relation(fields: [usuarioId], references: [id])
+}
+
+model ChatMessage {
+  id         String   @id @default(uuid())
+  conversaId String
+  role       String
+  content    String
+  createdAt  DateTime @default(now())
+  conversa   Conversa @relation(fields: [conversaId], references: [id], onDelete: Cascade)
 }

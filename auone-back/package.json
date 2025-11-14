@@ -12,7 +12,7 @@
     "test:pg": "node test-pg-conn.js"
   },
   "dependencies": {
-    "@google/genai": "^1.29.0",
+    "@google/genai": "^1.29.1",
     "@google/generative-ai": "^0.24.1",
     "@prisma/client": "^6.19.0",
     "bcryptjs": "^3.0.2",
@@ -27,7 +27,7 @@
     "@types/bcryptjs": "^2.4.6",
     "@types/cors": "^2.8.19",
     "@types/dotenv": "^6.1.1",
-    "@types/express": "^5.0.3",
+    "@types/express": "^5.0.5",
     "@types/jsonwebtoken": "^9.0.2",
     "@types/multer": "^2.0.0",
     "@types/node": "^24.3.1",
