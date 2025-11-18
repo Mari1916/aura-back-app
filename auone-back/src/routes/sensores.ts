@@ -6,7 +6,7 @@ const router = express.Router();
 // POST /api/sensores
 router.post("/", receberDadosSensor);
 
-// GET /api/sensores
+// GET /api/sensores/sensores
 router.get("/sensores", enviarUltimoDado);
 
 export default router;
