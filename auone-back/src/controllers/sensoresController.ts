@@ -1,7 +1,8 @@
 import { Request, Response } from "express";
 import { DadoSensor } from "@prisma/client";
-import { prisma } from "../config/prisma";
+import { PrismaClient } from "@prisma/client";
 
+const prisma = new PrismaClient();
 // Tipo do último dado em memória
 interface UltimoDado {
   deviceId: string;
