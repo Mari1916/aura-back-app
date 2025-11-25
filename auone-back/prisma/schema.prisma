@@ -4,8 +4,8 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
+
 
 model Usuario {
   id                 String        @id @default(uuid())
@@ -60,7 +60,6 @@ model ChatMessage {
   id         String   @id @default(uuid())
   conversaId String
   usuarioId String
-  role       Role
   content    String
   createdAt  DateTime @default(now())
   conversa   Conversa @relation(fields: [conversaId], references: [id], onDelete: Cascade)
