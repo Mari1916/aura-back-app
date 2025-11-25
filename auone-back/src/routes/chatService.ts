@@ -1,10 +1,9 @@
 import express, { Request, Response } from "express";
 import dotenv from "dotenv";
 import { GoogleGenAI } from "@google/genai";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../config/prisma";
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 dotenv.config();
 
