@@ -40,23 +40,25 @@ router.post('/message', async (req: Request, res: Response) => {
 
     // 4. SALVA APENAS A MENSAGEM ATUAL NO BANCO
     await prisma.$transaction([
-      // Salva a mensagem do usuário
-      prisma.chatMessage.create({
-        data: {
-          conversaId: conversa.id,
-          content: message,
-          role: "user",
-        }
-      }),
-      // Salva a resposta do assistente
-      prisma.chatMessage.create({
-        data: {
-          conversaId: conversa.id,
-          content: assistantResponse || '',
-          role: "assistant",
-        }
-      })
-    ]);
+  prisma.chatMessage.create({
+    data: {
+      conversaId: conversa.id,
+      content: message,
+      role: "user",
+      usuarioId: userId
+    }
+  }),
+
+  prisma.chatMessage.create({
+    data: {
+      conversaId: conversa.id,
+      content: assistantResponse || "",
+      role: "assistant",
+      usuarioId: userId   // OU "assistant"
+    }
+  })
+]);
+
 
     // 5. Retorna a resposta
     return res.json({
