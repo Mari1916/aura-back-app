@@ -6,7 +6,7 @@ export const cadastrarDispositivo = async (req: Request, res: Response) => {
   try {
     const { nome, deviceId, usuarioId } = req.body;
 
-    console.log("📦 Dados recebidos:", req.body);
+    console.log(" Dados recebidos:", req.body);
 
     // 🔹 Verifica se todos os campos obrigatórios estão presentes
     if (!nome || !deviceId || !usuarioId) {
@@ -25,7 +25,7 @@ export const cadastrarDispositivo = async (req: Request, res: Response) => {
       });
     }
 
-    // 🔹 Cria o novo dispositivo se não existir duplicado
+    //  Cria o novo dispositivo se não existir duplicado
     const dispositivo = await prisma.dispositivo.create({
       data: {
         nome,
