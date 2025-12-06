@@ -1,7 +1,9 @@
 import express, { Request, Response } from "express";
 import dotenv from "dotenv";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { PrismaClient } from "@prisma/client";
+
+// @ts-ignore → ignora o bug do TypeScript no pacote
+const { Client } = require("@google/genai");
 
 dotenv.config();
 
@@ -9,19 +11,20 @@ const prisma = new PrismaClient();
 const router = express.Router();
 
 const SYSTEM_MESSAGE =
-  "Você é um assistente de IA especialista em detecção e solução de pragas...";
+  "Você é um assistente de IA especialista em detecção e solução de pragas.";
 
 router.post("/message", async (req: Request, res: Response) => {
   const { userId, message } = req.body;
 
   if (!userId || !message) {
-    return res
-      .status(400)
-      .json({ error: "userId e message são obrigatórios." });
+    return res.status(400).json({ error: "userId e message são obrigatórios." });
   }
 
   try {
-    const usuario = await prisma.usuario.findUnique({ where: { id: userId } });
+    const usuario = await prisma.usuario.findUnique({
+      where: { id: userId },
+    });
+
     if (!usuario) {
       return res.status(400).json({ error: "Usuário não encontrado." });
     }
@@ -33,14 +36,15 @@ router.post("/message", async (req: Request, res: Response) => {
       },
     });
 
-    const prompt = `${SYSTEM_MESSAGE}\n\nUsuário descreve: ${message}`;
+    // Instancia o cliente
+    const client = new Client({ apiKey: process.env.GEMINI_API_KEY });
 
-    // 🔥 CORRETO
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const result = await client.models.generateText({
+      model: "gemini-1.5-flash",
+      prompt: `${SYSTEM_MESSAGE}\n\nUsuário descreve: ${message}`,
+    });
 
-    const result = await model.generateContent(prompt);
-    const assistantResponse = result.response.text();
+    const assistantResponse = result.outputText;
 
     await prisma.$transaction([
       prisma.chatMessage.create({
@@ -61,12 +65,16 @@ router.post("/message", async (req: Request, res: Response) => {
       }),
     ]);
 
-    return res.json({ response: assistantResponse, conversaId: conversa.id });
+    return res.json({
+      response: assistantResponse,
+      conversaId: conversa.id,
+    });
+
   } catch (error) {
     console.error("🔥 Erro no chat service:", error);
-    return res
-      .status(500)
-      .json({ error: "Erro interno no servidor ao processar a mensagem." });
+    return res.status(500).json({
+      error: "Erro interno no servidor ao processar a mensagem.",
+    });
   }
 });
 
