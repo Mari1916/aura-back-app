@@ -15,64 +15,61 @@ router.post("/message", async (req: Request, res: Response) => {
   const { userId, message } = req.body;
 
   if (!userId || !message) {
-    return res
-      .status(400)
-      .json({ error: "userId e message são obrigatórios." });
+    return res.status(400).json({ error: "userId e message são obrigatórios." });
   }
 
   try {
-    // Verifica usuário
+    // Garante que o ID seja string
     const usuario = await prisma.usuario.findUnique({
-      where: { id: userId },
+      where: { id: String(userId) },
     });
 
     if (!usuario) {
       return res.status(400).json({ error: "Usuário não encontrado." });
     }
 
-    // Verifica API KEY
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      throw new Error("GEMINI_API_KEY não está definida no .env");
-    }
-
-    // Cria conversa
     const conversa = await prisma.conversa.create({
       data: {
-        usuarioId: userId,
+        usuarioId: String(userId),
         titulo: "Consulta: " + message.substring(0, 30) + "...",
       },
     });
 
-    // Instanciação correta do Gemini
+    // Instancia o Gemini 2.5
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      throw new Error("GEMINI_API_KEY não encontrada no .env");
+    }
+
     const genAI = new GoogleGenerativeAI(apiKey);
 
+
     const model = genAI.getGenerativeModel({
-      model: "gemini-pro",
+      model: "models/gemini-2.5-flash", // modelo válido
     });
 
     const result = await model.generateContent(
       `${SYSTEM_MESSAGE}\n\nUsuário descreve: ${message}`
     );
 
-    const assistantResponse = result.response.text() || "Não consegui gerar uma resposta.";
+    const assistantResponse = result.response.text();
 
-    // Salva no DB
+    // Salva no banco
     await prisma.$transaction([
       prisma.chatMessage.create({
         data: {
           conversaId: conversa.id,
           content: message,
           role: "user",
-          usuarioId: userId,
+          usuarioId: String(userId),
         },
       }),
       prisma.chatMessage.create({
         data: {
           conversaId: conversa.id,
-          content: assistantResponse,
+          content: assistantResponse || "",
           role: "assistant",
-          usuarioId: userId,
+          usuarioId: String(userId),
         },
       }),
     ]);
