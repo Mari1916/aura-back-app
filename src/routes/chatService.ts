@@ -48,7 +48,7 @@ router.post("/message", async (req: Request, res: Response) => {
     const genAI = new GoogleGenerativeAI(apiKey);
 
     const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash-latest",
+      model: "gemini-pro",
     });
 
     const result = await model.generateContent(
