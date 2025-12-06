@@ -35,14 +35,13 @@ router.post("/message", async (req: Request, res: Response) => {
       },
     });
 
-    // Instancia o Gemini 2.5
-    const apiKey = process.env.GEMINI_API_KEY;
+    // Usa GOOGLE_API_KEY
+    const apiKey = process.env.GOOGLE_API_KEY;
     if (!apiKey) {
-      throw new Error("GEMINI_API_KEY não encontrada no .env");
+      throw new Error("GOOGLE_API_KEY não encontrada no .env");
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-
 
     const model = genAI.getGenerativeModel({
       model: "models/gemini-2.5-flash", // modelo válido
