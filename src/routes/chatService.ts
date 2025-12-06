@@ -40,8 +40,9 @@ router.post("/message", async (req: Request, res: Response) => {
 
     // use "gemini-pro" para garantir compatibilidade
     const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash-001",
+      model: "gemini-pro",
     });
+
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
