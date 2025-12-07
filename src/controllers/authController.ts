@@ -153,3 +153,27 @@ export const atualizarPerfil = async (req: Request, res: Response) => {
     res.status(500).json({ erro: "Erro ao atualizar perfil", detalhe: String(error) });
   }
 };
+
+// ==================== REDEFINIÇÃO DE SENHA ====================
+export const redefinirSenha = async (req: Request, res: Response) => {
+  try {
+    const { email, novaSenha } = req.body;
+
+    if (!email || !novaSenha) {
+      return res.status(400).json({ erro: "Email e nova senha são obrigatórios" });
+    }
+
+    // Hash da nova senha
+    const senhaHash = await bcrypt.hash(novaSenha, 10);
+
+    const usuario = await prisma.usuario.update({
+      where: { email },
+      data: { senhaHash },
+    });
+
+    res.json({ mensagem: "Senha atualizada com sucesso!" });
+  } catch (error: any) {
+    console.error(error);
+    res.status(500).json({ erro: "Erro ao atualizar senha", detalhe: String(error) });
+  }
+};
