@@ -1,1 +1,1 @@
-Backend do TCC para finalização de curos no Senai Cotia
+Backend do TCC para finalização de curso no Senai Cotia
